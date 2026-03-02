@@ -1,0 +1,36 @@
+---
+BasedOnStyle: Google
+IndentWidth: 4
+ColumnLimit: 100
+AccessModifierOffset: -4
+ConstructorInitializerIndentWidth: 4
+ContinuationIndentWidth: 4
+
+# Braces
+BreakBeforeBraces: Attach
+BraceWrapping:
+  AfterClass: false
+  AfterFunction: false
+
+# Alignment
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignTrailingComments: true
+
+# Includes
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  # Project headers first
+  - Regex: '^"sparsity/'
+    Priority: 1
+  # System/third-party
+  - Regex: '^<'
+    Priority: 2
+
+# Misc
+SpacesInAngles: false
+SpaceAfterTemplateKeyword: false
+DerivePointerAlignment: false
+PointerAlignment: Left
+...
