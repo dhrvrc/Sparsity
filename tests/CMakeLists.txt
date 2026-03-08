@@ -1,13 +1,4 @@
-include(FetchContent)
-
-FetchContent_Declare(
-    googletest
-    URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
-# Don't install gtest alongside the project
-set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
+find_package(GTest REQUIRED)
 
 # Helper: add a test executable linked against sparsity + gtest
 function(sparsity_add_test name src)

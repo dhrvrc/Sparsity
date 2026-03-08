@@ -29,7 +29,7 @@ void DenseIndex::add(const float* data, uint32_t n, uint32_t dim) {
     }
 
     // Append the new rows to backing storage.
-    // After resize the old mat_.data pointer may be invalid; we fix it below.
+    // After resize the old mat_.data pointer may be invalid so we fix it below.
     const size_t n_new_floats = static_cast<size_t>(n) * dim;
     const size_t old_size     = storage_.size();
     storage_.resize(old_size + n_new_floats);
@@ -39,14 +39,30 @@ void DenseIndex::add(const float* data, uint32_t n, uint32_t dim) {
     mat_.data    = storage_.data();
     mat_.n_rows += n;
     mat_.n_cols  = dim;
+
+    // For cosine, pre-normalise new rows to unit length so that search-time
+    // inner products equal cosine similarity directly.
+    if (metric_ == Metric::COSINE) {
+        float* base = storage_.data() + old_size;
+        for (uint32_t i = 0; i < n; ++i) {
+            float* vec     = base + static_cast<size_t>(i) * dim;
+            float  norm_sq = 0.0f;
+            for (uint32_t j = 0; j < dim; ++j) norm_sq += vec[j] * vec[j];
+            if (norm_sq > 0.0f) {
+                const float inv = 1.0f / std::sqrt(norm_sq);
+                for (uint32_t j = 0; j < dim; ++j) vec[j] *= inv;
+            }
+            // zero-norm row: leave as zero — distance to any valid query = 1.0
+        }
+    }
 }
 
 SearchResult DenseIndex::search(const float* queries, uint32_t n_queries, uint32_t k) const {
     if (mat_.n_rows == 0) {
         throw std::runtime_error("DenseIndex::search — index is empty");
     }
-    if (metric_ != Metric::L2) {
-        throw std::logic_error("DenseIndex::search — only L2 is implemented");
+    if (metric_ != Metric::L2 && metric_ != Metric::COSINE) {
+        throw std::logic_error("DenseIndex::search — unsupported metric");
     }
 
     const uint32_t n        = mat_.n_rows;
@@ -59,26 +75,53 @@ SearchResult DenseIndex::search(const float* queries, uint32_t n_queries, uint32
     result.distances.resize(static_cast<size_t>(n_queries) * k_actual);
     result.indices.resize(static_cast<size_t>(n_queries) * k_actual, -1);
 
-    // Reuse this scratch buffer across queries to avoid repeated allocation.
+    // Reuse scratch buffers across queries to avoid repeated allocation.
     std::vector<std::pair<float, int64_t>> dist_idx(n);
+    std::vector<float>                     q_normed(d); // cosine only
 
     for (uint32_t q = 0; q < n_queries; ++q) {
         const float* query = queries + static_cast<size_t>(q) * d;
 
-        // Rank by squared L2 — defers sqrt until we have the final k winners.
-        for (uint32_t i = 0; i < n; ++i) {
-            dist_idx[i] = {l2_distance_sq(query, mat_.row(i), d), static_cast<int64_t>(i)};
-        }
-
-        // Bring the k_actual smallest distances to the front in O(n log k).
-        std::partial_sort(dist_idx.begin(), dist_idx.begin() + k_actual, dist_idx.end());
-
-        // Write out, converting squared distances to true L2.
         float*   out_dist = result.distances.data() + static_cast<size_t>(q) * k_actual;
         int64_t* out_idx  = result.indices.data()   + static_cast<size_t>(q) * k_actual;
-        for (uint32_t j = 0; j < k_actual; ++j) {
-            out_dist[j] = std::sqrt(dist_idx[j].first);
-            out_idx[j]  = dist_idx[j].second;
+
+        if (metric_ == Metric::L2) {
+            // Rank by squared L2 — defers sqrt until we have the final k winners.
+            for (uint32_t i = 0; i < n; ++i) {
+                dist_idx[i] = {l2_distance_sq(query, mat_.row(i), d), static_cast<int64_t>(i)};
+            }
+            std::partial_sort(dist_idx.begin(), dist_idx.begin() + k_actual, dist_idx.end());
+            for (uint32_t j = 0; j < k_actual; ++j) {
+                out_dist[j] = std::sqrt(dist_idx[j].first);
+                out_idx[j]  = dist_idx[j].second;
+            }
+        } else {
+            // Cosine: db vectors are pre-normalised; normalise query once.
+            float norm_sq = 0.0f;
+            for (uint32_t j = 0; j < d; ++j) {
+                q_normed[j] = query[j];
+                norm_sq    += query[j] * query[j];
+            }
+            const bool q_valid = norm_sq > 0.0f;
+            if (q_valid) {
+                const float inv = 1.0f / std::sqrt(norm_sq);
+                for (uint32_t j = 0; j < d; ++j) q_normed[j] *= inv;
+            }
+
+            // distance = 1 - dot(q_normed, stored_normed)
+            for (uint32_t i = 0; i < n; ++i) {
+                float dot = 0.0f;
+                if (q_valid) {
+                    const float* row = mat_.row(i);
+                    for (uint32_t j = 0; j < d; ++j) dot += q_normed[j] * row[j];
+                }
+                dist_idx[i] = {1.0f - dot, static_cast<int64_t>(i)};
+            }
+            std::partial_sort(dist_idx.begin(), dist_idx.begin() + k_actual, dist_idx.end());
+            for (uint32_t j = 0; j < k_actual; ++j) {
+                out_dist[j] = dist_idx[j].first;
+                out_idx[j]  = dist_idx[j].second;
+            }
         }
     }
 
@@ -92,7 +135,7 @@ void DenseIndex::validate() const {
 }
 
 // ---------------------------------------------------------------------------
-// SparseIndex — stubs (not yet implemented)
+// SparseIndex stubs
 // ---------------------------------------------------------------------------
 
 SparseIndex::SparseIndex(uint32_t dim, Metric metric) : dim_(dim), metric_(metric) {}
@@ -120,6 +163,8 @@ void SparseIndex::validate() const {
 
 // ---------------------------------------------------------------------------
 // Index — unified entry point
+// The goal of this is to make the creation of indices easy for the caller
+// they can essentially specify type of metric, datatype they want to use for storage of the vectors and  whether vectors are expected to be sparse or dense
 // ---------------------------------------------------------------------------
 
 Index::Index(Metric metric)
@@ -213,8 +258,13 @@ void Index::add(const uint32_t* /*indptr*/, const uint32_t* /*indices*/,
 
 // --- search() stubs ---
 
-SearchResult Index::search(const float*, uint32_t, uint32_t) const {
-    throw std::logic_error("Index::search — not yet implemented");
+SearchResult Index::search(const float* queries, uint32_t n, uint32_t k) const {
+    if (dtype_ != DataType::DenseFloat) {
+        throw std::invalid_argument(
+            std::string("Index::search(float*) — index dtype is ") +
+            data_type_name(dtype_) + ", expected dense_float");
+    }
+    return dense_idx_->search(queries, n, k);
 }
 
 SearchResult Index::search(const int32_t*, uint32_t, uint32_t) const {
