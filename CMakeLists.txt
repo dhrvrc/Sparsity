@@ -43,10 +43,14 @@ set(SPARSITY_SOURCES
     src/core/metrics/l2.cpp
     src/core/metrics/cosine.cpp
     src/core/metrics/tanimoto.cpp
+    src/core/packing.cpp
     src/core/sparse.cpp
     src/core/binary.cpp
     src/core/index.cpp
     src/core/dispatch.cpp
+    src/core/kmeans.cpp
+    src/core/ivf.cpp
+    src/core/tiled_dense.cpp
 )
 
 if(WITH_CUDA)

@@ -1,5 +1,6 @@
 #include "sparsity/index.h"
 #include "sparsity/metrics.h"
+#include "sparsity/packing.h"
 
 #include <algorithm>
 #include <cassert>
@@ -148,6 +149,11 @@ void SparseIndex::add_binary(const uint64_t*, uint32_t) {
     throw std::logic_error("SparseIndex::add_binary — not yet implemented");
 }
 
+void SparseIndex::add_binary(const bool* data, uint32_t n_rows) {
+    auto packed = pack_bits_batch(data, n_rows, dim_);
+    add_binary(packed.data(), n_rows);
+}
+
 SearchResult SparseIndex::search(const uint32_t*, const uint32_t*, const float*,
                                  uint32_t, uint32_t) const {
     throw std::logic_error("SparseIndex::search — not yet implemented");
@@ -231,6 +237,15 @@ void Index::add(const uint64_t* data, uint32_t n_rows) {
     if (dtype_ != DataType::Binary) {
         throw std::invalid_argument(
             std::string("Index::add(uint64_t*) — index dtype is ") +
+            data_type_name(dtype_) + ", expected binary");
+    }
+    sparse_idx_->add_binary(data, n_rows);
+}
+
+void Index::add(const bool* data, uint32_t n_rows) {
+    if (dtype_ != DataType::Binary) {
+        throw std::invalid_argument(
+            std::string("Index::add(bool*) — index dtype is ") +
             data_type_name(dtype_) + ", expected binary");
     }
     sparse_idx_->add_binary(data, n_rows);

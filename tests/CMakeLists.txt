@@ -9,3 +9,4 @@ function(sparsity_add_test name src)
 endfunction()
 
 add_subdirectory(metrics)
+add_subdirectory(index)

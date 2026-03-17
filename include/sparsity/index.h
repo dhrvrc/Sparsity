@@ -91,6 +91,10 @@ public:
     // data: uint64_t[n * ceil(dim/64)], row-major.
     void add_binary(const uint64_t* data, uint32_t n_rows);
 
+    // Add n binary vectors as a flat bool array (one bool per bit).
+    // data: bool[n * dim], row-major. Packs internally.
+    void add_binary(const bool* data, uint32_t n_rows);
+
     // Search float sparse queries.
     SearchResult search(const uint32_t* q_indptr, const uint32_t* q_indices,
                         const float* q_values, uint32_t n_queries, uint32_t k) const;
@@ -170,6 +174,8 @@ public:
     void add(const int32_t*  data,   uint32_t n, uint32_t dim);
     // Binary: data is row-major uint64_t[n × ceil(dim_/64)]
     void add(const uint64_t* data,   uint32_t n_rows);
+    // Binary: data is row-major bool[n × dim] — packs internally
+    void add(const bool*     data,   uint32_t n_rows);
     // SparseFloat: CSR — indptr[n+1], indices[nnz], values[nnz] (float32)
     void add(const uint32_t* indptr, const uint32_t* indices,
              const float*    values, uint32_t n_rows);
