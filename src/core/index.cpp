@@ -106,17 +106,94 @@ void DenseIndex::validate() const {
 }
 
 // ---------------------------------------------------------------------------
-// SparseIndex stubs
+// SparseIndex
 // ---------------------------------------------------------------------------
 
 SparseIndex::SparseIndex(uint32_t dim, Metric metric) : dim_(dim), metric_(metric) {}
 
-void SparseIndex::add(const uint32_t*, const uint32_t*, const float*, uint32_t) {
-    throw std::logic_error("SparseIndex::add — not yet implemented");
+// ---------------------------------------------------------------------------
+// SparseIndex::add — float sparse vectors in CSR format
+//
+// Appends n_rows rows to the index.  indptr has length n_rows+1; row i spans
+// columns indices[indptr[i]..indptr[i+1]) with the corresponding values.
+// Indices within each row must be sorted ascending (CSR invariant).
+//
+// Norms are computed once here and stored in norms_; both cosine (needs norm)
+// and L2 (needs norm^2) derive what they need from this at search time with a
+// single multiply — cheaper than storing both.
+// ---------------------------------------------------------------------------
+void SparseIndex::add(const uint32_t* indptr, const uint32_t* indices,
+                      const float* values, uint32_t n_rows) {
+    if (n_rows == 0) return;
+
+    if (metric_ != Metric::COSINE && metric_ != Metric::L2) {
+        throw std::invalid_argument(
+            "SparseIndex::add — metric must be COSINE or L2 for sparse float vectors");
+    }
+    if (binary_mode_) {
+        throw std::logic_error(
+            "SparseIndex::add — index is in binary mode; cannot mix binary and float sparse");
+    }
+
+    const uint32_t nnz_new  = indptr[n_rows];  // total new non-zeros
+    const uint32_t base_nnz = mat_.nnz;        // current total nnz before this batch
+
+    // Extend indptr storage.  The stored array is shared across all add() calls:
+    // indptr_storage_[0] = 0, then one entry per row across all batches.
+    if (indptr_storage_.empty()) {
+        indptr_storage_.push_back(0);
+    }
+    for (uint32_t i = 1; i <= n_rows; ++i) {
+        indptr_storage_.push_back(base_nnz + indptr[i]);
+    }
+
+    // Append column indices and values.
+    indices_storage_.insert(indices_storage_.end(), indices, indices + nnz_new);
+    values_storage_.insert(values_storage_.end(),  values,  values  + nnz_new);
+
+    // Compute and store L2 norm for each new row.
+    for (uint32_t r = 0; r < n_rows; ++r) {
+        float norm_sq = 0.0f;
+        for (uint32_t i = indptr[r]; i < indptr[r + 1]; ++i) {
+            norm_sq += values[i] * values[i];
+        }
+        norms_.push_back(std::sqrt(norm_sq));
+    }
+
+    // Refresh the non-owning SparseMatrix view into the storage vectors.
+    mat_.indptr  = indptr_storage_.data();
+    mat_.indices = indices_storage_.data();
+    mat_.values  = values_storage_.data();
+    mat_.n_rows += n_rows;
+    mat_.n_cols  = dim_;
+    mat_.nnz    += nnz_new;
 }
 
-void SparseIndex::add_binary(const uint64_t*, uint32_t) {
-    throw std::logic_error("SparseIndex::add_binary — not yet implemented");
+// ---------------------------------------------------------------------------
+// SparseIndex::add_binary — packed-bit binary vectors
+// ---------------------------------------------------------------------------
+void SparseIndex::add_binary(const uint64_t* data, uint32_t n_rows) {
+    if (n_rows == 0) return;
+
+    if (metric_ != Metric::TANIMOTO) {
+        throw std::invalid_argument(
+            "SparseIndex::add_binary — metric must be TANIMOTO for binary vectors");
+    }
+    if (mat_.n_rows > 0) {
+        throw std::logic_error(
+            "SparseIndex::add_binary — index already has float sparse data");
+    }
+
+    binary_mode_ = true;
+
+    const uint32_t wpr     = (dim_ + 63u) / 64u;  // words per row
+    const size_t   n_words = static_cast<size_t>(n_rows) * wpr;
+
+    binary_storage_.insert(binary_storage_.end(), data, data + n_words);
+
+    bin_.data    = binary_storage_.data();
+    bin_.n_rows += n_rows;
+    bin_.dim     = dim_;
 }
 
 void SparseIndex::add_binary(const bool* data, uint32_t n_rows) {
@@ -124,17 +201,50 @@ void SparseIndex::add_binary(const bool* data, uint32_t n_rows) {
     add_binary(packed.data(), n_rows);
 }
 
-SearchResult SparseIndex::search(const uint32_t*, const uint32_t*, const float*,
-                                 uint32_t, uint32_t) const {
-    throw std::logic_error("SparseIndex::search — not yet implemented");
+// ---------------------------------------------------------------------------
+// SparseIndex::search — brute-force over float sparse vectors
+// ---------------------------------------------------------------------------
+SearchResult SparseIndex::search(const uint32_t* q_indptr, const uint32_t* q_indices,
+                                 const float* q_values, uint32_t n_queries,
+                                 uint32_t k) const {
+    if (mat_.n_rows == 0) {
+        throw std::runtime_error("SparseIndex::search — index is empty");
+    }
+
+    return dispatch_sparse_search(mat_, norms_.data(),
+                                  q_indptr, q_indices, q_values,
+                                  n_queries, k, metric_);
 }
 
-SearchResult SparseIndex::search_binary(const uint64_t*, uint32_t, uint32_t) const {
-    throw std::logic_error("SparseIndex::search_binary — not yet implemented");
+// ---------------------------------------------------------------------------
+// SparseIndex::search_binary — brute-force Tanimoto over binary vectors
+// ---------------------------------------------------------------------------
+SearchResult SparseIndex::search_binary(const uint64_t* queries,
+                                        uint32_t n_queries, uint32_t k) const {
+    if (bin_.n_rows == 0) {
+        throw std::runtime_error("SparseIndex::search_binary — index is empty");
+    }
+
+    return dispatch_binary_search(bin_, queries, n_queries, k);
 }
 
+// ---------------------------------------------------------------------------
+// SparseIndex::validate
+// ---------------------------------------------------------------------------
 void SparseIndex::validate() const {
-    throw std::logic_error("SparseIndex::validate — not yet implemented");
+    if (binary_mode_) {
+        assert(binary_storage_.size() ==
+               static_cast<size_t>(bin_.n_rows) * bin_.words_per_row());
+        assert(bin_.dim == dim_);
+    } else {
+        assert(norms_.size() == mat_.n_rows);
+        assert(indices_storage_.size() == mat_.nnz);
+        assert(values_storage_.size()  == mat_.nnz);
+        if (mat_.n_rows > 0) {
+            assert(indptr_storage_.front() == 0);
+            assert(indptr_storage_[mat_.n_rows] == mat_.nnz);
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -253,21 +363,31 @@ SearchResult Index::search(const float* queries, uint32_t n, uint32_t k) const {
 }
 
 SearchResult Index::search(const int32_t*, uint32_t, uint32_t) const {
-    throw std::logic_error("Index::search — not yet implemented");
+    throw std::logic_error("Index::search — DenseInt32 not yet implemented");
 }
 
-SearchResult Index::search(const uint64_t*, uint32_t, uint32_t) const {
-    throw std::logic_error("Index::search — not yet implemented");
+SearchResult Index::search(const uint64_t* queries, uint32_t n, uint32_t k) const {
+    if (dtype_ != DataType::Binary) {
+        throw std::invalid_argument(
+            std::string("Index::search(uint64_t*) — index dtype is ") +
+            data_type_name(dtype_) + ", expected binary");
+    }
+    return sparse_idx_->search_binary(queries, n, k);
 }
 
-SearchResult Index::search(const uint32_t*, const uint32_t*,
-                           const float*, uint32_t, uint32_t) const {
-    throw std::logic_error("Index::search — not yet implemented");
+SearchResult Index::search(const uint32_t* q_indptr, const uint32_t* q_indices,
+                           const float* q_values, uint32_t n, uint32_t k) const {
+    if (dtype_ != DataType::SparseFloat) {
+        throw std::invalid_argument(
+            std::string("Index::search(CSR float32) — index dtype is ") +
+            data_type_name(dtype_) + ", expected sparse_float");
+    }
+    return sparse_idx_->search(q_indptr, q_indices, q_values, n, k);
 }
 
 SearchResult Index::search(const uint32_t*, const uint32_t*,
                            const int32_t*, uint32_t, uint32_t) const {
-    throw std::logic_error("Index::search — not yet implemented");
+    throw std::logic_error("Index::search — SparseInt32 not yet implemented");
 }
 
 } // namespace sparsity

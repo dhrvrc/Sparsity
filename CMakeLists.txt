@@ -43,9 +43,11 @@ set(SPARSITY_SOURCES
     src/core/metrics/l2.cpp
     src/core/metrics/cosine.cpp
     src/core/metrics/tanimoto.cpp
+    src/core/metrics/sparse.cpp
     src/core/packing.cpp
     src/core/sparse.cpp
     src/core/binary.cpp
+    src/core/blocked_ell.cpp
     src/core/index.cpp
     src/core/dispatch.cpp
     src/core/kmeans.cpp
@@ -57,7 +59,9 @@ if(WITH_CUDA)
     list(APPEND SPARSITY_SOURCES
         src/cuda/metrics/l2.cu
         src/cuda/metrics/cosine.cu
+        src/cuda/metrics/tanimoto.cu
         src/cuda/topk.cu
+        src/cuda/sparse_dot.cu
     )
 endif()
 

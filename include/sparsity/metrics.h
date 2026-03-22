@@ -1,5 +1,7 @@
 #pragma once
 
+#include "sparsity/sparse.h"
+
 #include <cstdint>
 
 // CPU reference implementations of all distance / similarity metrics.
@@ -38,5 +40,26 @@ float cosine_distance(const float* a, const float* b, uint32_t dim);
 // Returns 1.0 if both vectors are all-zero (identical empty sets).
 // n_words = ceil(dim / 64); caller must pass the correct word count.
 float tanimoto_similarity(const uint64_t* a, const uint64_t* b, uint32_t n_words);
+
+// ---------------------------------------------------------------------------
+// Sparse float vector metrics (CSR format)
+// Both require indices in each SparseVector to be sorted strictly ascending.
+// ---------------------------------------------------------------------------
+
+// Dot product of two sparse vectors via sorted-index merge walk.
+// O(nnz_a + nnz_b).
+float sparse_dot(SparseVector a, SparseVector b);
+
+// Cosine distance for sparse vectors: 1 - dot(a,b) / (norm_a * norm_b).
+// norm_a and norm_b are the L2 norms, pre-computed by the caller.
+// Returns 1.0 if either norm is zero.
+float sparse_cosine_distance(SparseVector a, SparseVector b,
+                             float norm_a, float norm_b);
+
+// L2 distance for sparse vectors using the identity:
+//   ||a - b||^2 = norm_sq_a + norm_sq_b - 2 * dot(a, b)
+// norm_sq_a and norm_sq_b are the squared L2 norms, pre-computed by the caller.
+float sparse_l2_distance(SparseVector a, SparseVector b,
+                         float norm_sq_a, float norm_sq_b);
 
 } // namespace sparsity

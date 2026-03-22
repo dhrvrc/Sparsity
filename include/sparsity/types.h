@@ -8,7 +8,7 @@ constexpr char VERSION[] = "0.1.0";
 // Convention: lower return value = more similar, EXCEPT Tanimoto which is a
 // similarity (higher = more similar).  Call sites must document which they use.
 //
-//   Metric::L2       — DenseFloat, DenseInt32
+//   Metric::L2       — DenseFloat, DenseInt32, SparseFloat
 //   Metric::COSINE   — DenseFloat, DenseInt32, SparseFloat, SparseInt32
 //   Metric::TANIMOTO — Binary (packed bit vectors)
 enum class Metric {
@@ -50,14 +50,15 @@ inline const char* data_type_name(DataType dt) {
 
 // Returns true if the (dtype, metric) pair is a supported combination.
 //
-//   L2       — DenseFloat, DenseInt32
+//   L2       — DenseFloat, DenseInt32, SparseFloat
 //   COSINE   — DenseFloat, DenseInt32, SparseFloat, SparseInt32
 //   TANIMOTO — Binary
 inline bool is_valid_combination(DataType dtype, Metric metric) {
     switch (metric) {
         case Metric::L2:
             return dtype == DataType::DenseFloat ||
-                   dtype == DataType::DenseInt32;
+                   dtype == DataType::DenseInt32  ||
+                   dtype == DataType::SparseFloat;
         case Metric::COSINE:
             return dtype == DataType::DenseFloat  ||
                    dtype == DataType::DenseInt32  ||

@@ -78,21 +78,23 @@ TEST(PackBits, PaddingZeroed) {
 }
 
 TEST(PackBits, SpansMultipleWords) {
-    // 65 bits: bit 0 and bit 64 set
-    std::vector<bool> src(65, false);
+    // 65 bits: bit 0 and bit 64 set.
+    // Use a plain array since std::vector<bool> is a bit-specialisation
+    // that does not expose a data() pointer to individual bools.
+    bool src[65] = {};
     src[0]  = true;
     src[64] = true;
     std::vector<uint64_t> dst(2, 0);
-    pack_bits(src.data(), 65, dst.data());
+    pack_bits(src, 65, dst.data());
     EXPECT_EQ(dst[0], uint64_t{1});   // bit 0 in word 0
     EXPECT_EQ(dst[1], uint64_t{1});   // bit 64 → bit 0 in word 1
 }
 
 TEST(PackBits, RoundTripTanimoto) {
     // Pack two identical bool vectors and verify Tanimoto = 1.0
-    std::vector<bool> src(128, false);
+    bool src[128] = {};
     src[0] = src[7] = src[63] = src[127] = true;
-    auto packed = pack_bits_batch(src.data(), 1, 128);
+    auto packed = pack_bits_batch(src, 1, 128);
     EXPECT_FLOAT_EQ(tanimoto_similarity(packed.data(), packed.data(), 2), 1.0f);
 }
 

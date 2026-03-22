@@ -119,6 +119,9 @@ private:
     std::vector<uint32_t> indptr_storage_;
     std::vector<uint32_t> indices_storage_;
     std::vector<float>    values_storage_;
+    // Per-row L2 norms, computed once at add() time.
+    // Used by cosine (norm) and L2 (norm^2) at search time.
+    std::vector<float>    norms_;
 
     // Binary storage
     BinaryMatrix          bin_;
