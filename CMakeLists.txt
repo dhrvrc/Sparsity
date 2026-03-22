@@ -57,9 +57,6 @@ if(WITH_CUDA)
     list(APPEND SPARSITY_SOURCES
         src/cuda/metrics/l2.cu
         src/cuda/metrics/cosine.cu
-        src/cuda/metrics/tanimoto.cu
-        src/cuda/sparse_dot.cu
-        src/cuda/transfer.cu
         src/cuda/topk.cu
     )
 endif()

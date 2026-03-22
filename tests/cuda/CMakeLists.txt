@@ -1,0 +1,1 @@
+sparsity_add_test(test_cuda_metrics test_cuda_metrics.cpp)

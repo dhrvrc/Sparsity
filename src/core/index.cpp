@@ -1,4 +1,5 @@
 #include "sparsity/index.h"
+#include "sparsity/dispatch.h"
 #include "sparsity/metrics.h"
 #include "sparsity/packing.h"
 
@@ -66,67 +67,36 @@ SearchResult DenseIndex::search(const float* queries, uint32_t n_queries, uint32
         throw std::logic_error("DenseIndex::search — unsupported metric");
     }
 
-    const uint32_t n        = mat_.n_rows;
-    const uint32_t d        = mat_.n_cols;
-    const uint32_t k_actual = std::min(k, n);
+    const uint32_t d = mat_.n_cols;
 
-    SearchResult result;
-    result.n_queries = n_queries;
-    result.k         = k_actual;
-    result.distances.resize(static_cast<size_t>(n_queries) * k_actual);
-    result.indices.resize(static_cast<size_t>(n_queries) * k_actual, -1);
+    if (metric_ == Metric::L2) {
+        // L2: pass raw queries and raw db directly to dispatch.
+        return dispatch_dense_search(queries, mat_.data,
+                                     n_queries, mat_.n_rows, d, k, Metric::L2);
+    }
 
-    // Reuse scratch buffers across queries to avoid repeated allocation.
-    std::vector<std::pair<float, int64_t>> dist_idx(n);
-    std::vector<float>                     q_normed(d); // cosine only
-
+    // COSINE: db vectors are already unit-normalised (done at add time).
+    // Normalise all queries on the host before dispatch so the GPU kernel
+    // only needs to compute dot products.
+    std::vector<float> q_normed(static_cast<size_t>(n_queries) * d);
     for (uint32_t q = 0; q < n_queries; ++q) {
-        const float* query = queries + static_cast<size_t>(q) * d;
+        const float* src = queries + static_cast<size_t>(q) * d;
+        float*       dst = q_normed.data() + static_cast<size_t>(q) * d;
 
-        float*   out_dist = result.distances.data() + static_cast<size_t>(q) * k_actual;
-        int64_t* out_idx  = result.indices.data()   + static_cast<size_t>(q) * k_actual;
+        float norm_sq = 0.0f;
+        for (uint32_t j = 0; j < d; ++j) norm_sq += src[j] * src[j];
 
-        if (metric_ == Metric::L2) {
-            // Rank by squared L2 — defers sqrt until we have the final k winners.
-            for (uint32_t i = 0; i < n; ++i) {
-                dist_idx[i] = {l2_distance_sq(query, mat_.row(i), d), static_cast<int64_t>(i)};
-            }
-            std::partial_sort(dist_idx.begin(), dist_idx.begin() + k_actual, dist_idx.end());
-            for (uint32_t j = 0; j < k_actual; ++j) {
-                out_dist[j] = std::sqrt(dist_idx[j].first);
-                out_idx[j]  = dist_idx[j].second;
-            }
+        if (norm_sq > 0.0f) {
+            const float inv = 1.0f / std::sqrt(norm_sq);
+            for (uint32_t j = 0; j < d; ++j) dst[j] = src[j] * inv;
         } else {
-            // Cosine: db vectors are pre-normalised; normalise query once.
-            float norm_sq = 0.0f;
-            for (uint32_t j = 0; j < d; ++j) {
-                q_normed[j] = query[j];
-                norm_sq    += query[j] * query[j];
-            }
-            const bool q_valid = norm_sq > 0.0f;
-            if (q_valid) {
-                const float inv = 1.0f / std::sqrt(norm_sq);
-                for (uint32_t j = 0; j < d; ++j) q_normed[j] *= inv;
-            }
-
-            // distance = 1 - dot(q_normed, stored_normed)
-            for (uint32_t i = 0; i < n; ++i) {
-                float dot = 0.0f;
-                if (q_valid) {
-                    const float* row = mat_.row(i);
-                    for (uint32_t j = 0; j < d; ++j) dot += q_normed[j] * row[j];
-                }
-                dist_idx[i] = {1.0f - dot, static_cast<int64_t>(i)};
-            }
-            std::partial_sort(dist_idx.begin(), dist_idx.begin() + k_actual, dist_idx.end());
-            for (uint32_t j = 0; j < k_actual; ++j) {
-                out_dist[j] = dist_idx[j].first;
-                out_idx[j]  = dist_idx[j].second;
-            }
+            // Zero-norm query: distance to every db vector will be 1 - 0 = 1.
+            std::fill(dst, dst + d, 0.0f);
         }
     }
 
-    return result;
+    return dispatch_dense_search(q_normed.data(), mat_.data,
+                                  n_queries, mat_.n_rows, d, k, Metric::COSINE);
 }
 
 void DenseIndex::validate() const {

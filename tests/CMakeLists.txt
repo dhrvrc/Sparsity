@@ -10,3 +10,7 @@ endfunction()
 
 add_subdirectory(metrics)
 add_subdirectory(index)
+
+if(WITH_CUDA)
+    add_subdirectory(cuda)
+endif()
