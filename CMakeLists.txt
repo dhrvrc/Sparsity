@@ -58,6 +58,7 @@ set(SPARSITY_SOURCES
 if(WITH_CUDA)
     list(APPEND SPARSITY_SOURCES
         src/cuda/metrics/l2.cu
+        src/cuda/metrics/l2_tiled.cu
         src/cuda/metrics/cosine.cu
         src/cuda/metrics/tanimoto.cu
         src/cuda/topk.cu

@@ -91,11 +91,12 @@ else
     echo "[cmake configure — using existing cache (WITH_CUDA=$CACHED_CUDA)]"
 fi
 
-echo "[cmake build — bench_dense + bench_gpu]"
-cmake --build "$BUILD_DIR" --target bench_dense bench_gpu --parallel "$(nproc)"
+echo "[cmake build — bench_dense + bench_gpu + bench_3d]"
+cmake --build "$BUILD_DIR" --target bench_dense bench_gpu bench_3d --parallel "$(nproc)"
 
 BENCH_BIN="$BUILD_DIR/benchmarks/bench_dense"
 GPU_BIN="$BUILD_DIR/benchmarks/bench_gpu"
+BENCH3D_BIN="$BUILD_DIR/benchmarks/bench_3d"
 
 if [[ ! -x "$BENCH_BIN" ]]; then
     echo "ERROR: bench_dense binary not found at $BENCH_BIN" >&2
@@ -105,8 +106,13 @@ if [[ ! -x "$GPU_BIN" ]]; then
     echo "ERROR: bench_gpu binary not found at $GPU_BIN" >&2
     exit 1
 fi
+if [[ ! -x "$BENCH3D_BIN" ]]; then
+    echo "ERROR: bench_3d binary not found at $BENCH3D_BIN" >&2
+    exit 1
+fi
 
 GPU_JSON="${OUT_JSON%.json}_gpu.json"
+BENCH3D_JSON="${OUT_JSON%.json}_3d.json"
 
 # ── run benchmarks ────────────────────────────────────────────────────────────
 echo
@@ -133,6 +139,18 @@ ELAPSED=$SECONDS
 echo
 echo "bench_gpu finished in ${ELAPSED}s"
 
+echo
+echo "── Run: bench_3d ────────────────────────────────────────────────────"
+echo "  binary : $BENCH3D_BIN"
+echo "  output : $BENCH3D_JSON"
+echo
+
+SECONDS=0
+"$BENCH3D_BIN" "$BENCH3D_JSON"
+ELAPSED=$SECONDS
+echo
+echo "bench_3d finished in ${ELAPSED}s"
+
 # ── plot ──────────────────────────────────────────────────────────────────────
 echo
 echo "── Plot ─────────────────────────────────────────────────────────────"
@@ -140,15 +158,22 @@ mkdir -p "$PLOTS_DIR"
 
 if command -v python3 &>/dev/null && python3 -c "import matplotlib" 2>/dev/null; then
     python3 "$REPO_ROOT/benchmarks/plot_results.py" "$OUT_JSON" --out-dir "$PLOTS_DIR"
-    echo "Plots written to: $PLOTS_DIR/"
+    echo "2D plots written to: $PLOTS_DIR/"
+
+    PLOTS3D_DIR="${BENCH3D_JSON%.json}_plots"
+    mkdir -p "$PLOTS3D_DIR"
+    python3 "$REPO_ROOT/benchmarks/plot_3d.py" "$BENCH3D_JSON" --out-dir "$PLOTS3D_DIR"
+    echo "3D plots written to: $PLOTS3D_DIR/"
 else
     echo "matplotlib not found — skipping plots."
     echo "Install with:  pip install matplotlib"
     echo "Then run:      python3 benchmarks/plot_results.py $OUT_JSON --out-dir $PLOTS_DIR"
+    echo "               python3 benchmarks/plot_3d.py $BENCH3D_JSON --out-dir ${BENCH3D_JSON%.json}_plots"
 fi
 
 echo
 echo "Done."
 echo "  Dense JSON : $OUT_JSON"
 echo "  GPU JSON   : $GPU_JSON"
+echo "  3D JSON    : $BENCH3D_JSON"
 echo "  Plots      : $PLOTS_DIR/"

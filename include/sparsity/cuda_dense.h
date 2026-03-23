@@ -50,6 +50,17 @@ void cuda_cosine_batch(const float* d_queries,
                        uint32_t     n_db,
                        uint32_t     dim);
 
+// Batched L2 distances — shared-memory tiled variant.
+// Processes (L2_TILE × L2_TILE) output cells per block by staging dimension
+// chunks in shared memory, amortising global memory reads across L2_TILE
+// queries simultaneously.  Same interface as cuda_l2_batch.
+void cuda_l2_tiled_batch(const float* d_queries,
+                          const float* d_db,
+                          float*       d_distances,
+                          uint32_t     n_queries,
+                          uint32_t     n_db,
+                          uint32_t     dim);
+
 // ---------------------------------------------------------------------------
 // Top-k kernel
 // Reduces the n_queries × n_db distance matrix to n_queries × k_actual
