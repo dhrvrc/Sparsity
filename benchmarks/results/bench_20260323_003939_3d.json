@@ -1,0 +1,590 @@
+{
+  "version": "0.1.0",
+  "timestamp": "2026-03-23T01:08:32",
+  "gpu_available": true,
+  "gpu_name": "NVIDIA GeForce RTX 3050 Laptop GPU",
+  "dim": 128,
+  "k": 10,
+  "metric": "L2",
+  "n_queries_list": [1, 4, 16, 64, 256, 512],
+  "n_db_list": [10000, 50000, 100000, 500000],
+  "n_records": 96,
+  "results": [
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 1,
+      "n_db": 10000,
+      "batch_time_ms": 0.5825
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 1,
+      "n_db": 10000,
+      "batch_time_ms": 0.6265
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 1,
+      "n_db": 10000,
+      "batch_time_ms": 2.9956
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 1,
+      "n_db": 10000,
+      "batch_time_ms": 2.8148
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 4,
+      "n_db": 10000,
+      "batch_time_ms": 2.2993
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 4,
+      "n_db": 10000,
+      "batch_time_ms": 0.9676
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 4,
+      "n_db": 10000,
+      "batch_time_ms": 3.1636
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 4,
+      "n_db": 10000,
+      "batch_time_ms": 3.0762
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 16,
+      "n_db": 10000,
+      "batch_time_ms": 9.0805
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 16,
+      "n_db": 10000,
+      "batch_time_ms": 3.7440
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 16,
+      "n_db": 10000,
+      "batch_time_ms": 3.4371
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 16,
+      "n_db": 10000,
+      "batch_time_ms": 2.9350
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 64,
+      "n_db": 10000,
+      "batch_time_ms": 38.5352
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 64,
+      "n_db": 10000,
+      "batch_time_ms": 14.8402
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 64,
+      "n_db": 10000,
+      "batch_time_ms": 5.6358
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 64,
+      "n_db": 10000,
+      "batch_time_ms": 3.9383
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 256,
+      "n_db": 10000,
+      "batch_time_ms": 181.4084
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 256,
+      "n_db": 10000,
+      "batch_time_ms": 67.1977
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 256,
+      "n_db": 10000,
+      "batch_time_ms": 11.9430
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 256,
+      "n_db": 10000,
+      "batch_time_ms": 7.1279
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 512,
+      "n_db": 10000,
+      "batch_time_ms": 468.3157
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 512,
+      "n_db": 10000,
+      "batch_time_ms": 135.3406
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 512,
+      "n_db": 10000,
+      "batch_time_ms": 20.3500
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 512,
+      "n_db": 10000,
+      "batch_time_ms": 9.4737
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 1,
+      "n_db": 50000,
+      "batch_time_ms": 3.9408
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 1,
+      "n_db": 50000,
+      "batch_time_ms": 3.8261
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 1,
+      "n_db": 50000,
+      "batch_time_ms": 8.7798
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 1,
+      "n_db": 50000,
+      "batch_time_ms": 9.2707
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 4,
+      "n_db": 50000,
+      "batch_time_ms": 15.1491
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 4,
+      "n_db": 50000,
+      "batch_time_ms": 5.7991
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 4,
+      "n_db": 50000,
+      "batch_time_ms": 9.4112
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 4,
+      "n_db": 50000,
+      "batch_time_ms": 9.0788
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 16,
+      "n_db": 50000,
+      "batch_time_ms": 61.4069
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 16,
+      "n_db": 50000,
+      "batch_time_ms": 22.3024
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 16,
+      "n_db": 50000,
+      "batch_time_ms": 11.8284
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 16,
+      "n_db": 50000,
+      "batch_time_ms": 9.2751
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 64,
+      "n_db": 50000,
+      "batch_time_ms": 249.2059
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 64,
+      "n_db": 50000,
+      "batch_time_ms": 86.3305
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 64,
+      "n_db": 50000,
+      "batch_time_ms": 19.2291
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 64,
+      "n_db": 50000,
+      "batch_time_ms": 11.7132
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 256,
+      "n_db": 50000,
+      "batch_time_ms": 1002.3638
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 256,
+      "n_db": 50000,
+      "batch_time_ms": 351.4198
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 256,
+      "n_db": 50000,
+      "batch_time_ms": 45.9433
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 256,
+      "n_db": 50000,
+      "batch_time_ms": 18.2030
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 512,
+      "n_db": 50000,
+      "batch_time_ms": 2295.3383
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 512,
+      "n_db": 50000,
+      "batch_time_ms": 671.0909
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 512,
+      "n_db": 50000,
+      "batch_time_ms": 79.5495
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 512,
+      "n_db": 50000,
+      "batch_time_ms": 27.1131
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 1,
+      "n_db": 100000,
+      "batch_time_ms": 6.5297
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 1,
+      "n_db": 100000,
+      "batch_time_ms": 7.4786
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 1,
+      "n_db": 100000,
+      "batch_time_ms": 14.7375
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 1,
+      "n_db": 100000,
+      "batch_time_ms": 17.3338
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 4,
+      "n_db": 100000,
+      "batch_time_ms": 30.2038
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 4,
+      "n_db": 100000,
+      "batch_time_ms": 12.2216
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 4,
+      "n_db": 100000,
+      "batch_time_ms": 14.5146
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 4,
+      "n_db": 100000,
+      "batch_time_ms": 13.9532
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 16,
+      "n_db": 100000,
+      "batch_time_ms": 108.9716
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 16,
+      "n_db": 100000,
+      "batch_time_ms": 44.6146
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 16,
+      "n_db": 100000,
+      "batch_time_ms": 20.6062
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 16,
+      "n_db": 100000,
+      "batch_time_ms": 15.1111
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 64,
+      "n_db": 100000,
+      "batch_time_ms": 455.8207
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 64,
+      "n_db": 100000,
+      "batch_time_ms": 158.1416
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 64,
+      "n_db": 100000,
+      "batch_time_ms": 38.0154
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 64,
+      "n_db": 100000,
+      "batch_time_ms": 23.3737
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 256,
+      "n_db": 100000,
+      "batch_time_ms": 2222.8671
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 256,
+      "n_db": 100000,
+      "batch_time_ms": 770.3091
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 256,
+      "n_db": 100000,
+      "batch_time_ms": 83.7913
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 256,
+      "n_db": 100000,
+      "batch_time_ms": 32.1486
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 512,
+      "n_db": 100000,
+      "batch_time_ms": 3512.1454
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 512,
+      "n_db": 100000,
+      "batch_time_ms": 1333.2323
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 512,
+      "n_db": 100000,
+      "batch_time_ms": 156.5985
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 512,
+      "n_db": 100000,
+      "batch_time_ms": 50.1823
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 1,
+      "n_db": 500000,
+      "batch_time_ms": 34.9806
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 1,
+      "n_db": 500000,
+      "batch_time_ms": 39.3116
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 1,
+      "n_db": 500000,
+      "batch_time_ms": 63.1277
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 1,
+      "n_db": 500000,
+      "batch_time_ms": 60.9072
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 4,
+      "n_db": 500000,
+      "batch_time_ms": 165.0272
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 4,
+      "n_db": 500000,
+      "batch_time_ms": 67.5799
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 4,
+      "n_db": 500000,
+      "batch_time_ms": 110.8372
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 4,
+      "n_db": 500000,
+      "batch_time_ms": 112.4616
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 16,
+      "n_db": 500000,
+      "batch_time_ms": 663.7948
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 16,
+      "n_db": 500000,
+      "batch_time_ms": 251.9801
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 16,
+      "n_db": 500000,
+      "batch_time_ms": 83.8680
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 16,
+      "n_db": 500000,
+      "batch_time_ms": 62.7797
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 64,
+      "n_db": 500000,
+      "batch_time_ms": 2263.0929
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 64,
+      "n_db": 500000,
+      "batch_time_ms": 807.7482
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 64,
+      "n_db": 500000,
+      "batch_time_ms": 185.4788
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 64,
+      "n_db": 500000,
+      "batch_time_ms": 105.2400
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 256,
+      "n_db": 500000,
+      "batch_time_ms": 9968.4405
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 256,
+      "n_db": 500000,
+      "batch_time_ms": 3833.2690
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 256,
+      "n_db": 500000,
+      "batch_time_ms": 412.4422
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 256,
+      "n_db": 500000,
+      "batch_time_ms": 158.5497
+    },
+    {
+      "backend": "cpu_nontiled",
+      "n_queries": 512,
+      "n_db": 500000,
+      "batch_time_ms": 21946.8391
+    },
+    {
+      "backend": "cpu_tiled",
+      "n_queries": 512,
+      "n_db": 500000,
+      "batch_time_ms": 7545.0111
+    },
+    {
+      "backend": "gpu_nontiled",
+      "n_queries": 512,
+      "n_db": 500000,
+      "batch_time_ms": null
+    },
+    {
+      "backend": "gpu_tiled",
+      "n_queries": 512,
+      "n_db": 500000,
+      "batch_time_ms": null
+    }
+  ]
+}
